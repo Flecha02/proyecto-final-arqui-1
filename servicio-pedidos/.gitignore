@@ -1,0 +1,24 @@
+# Dependencias de Node
+node_modules/
+
+# Carpeta de compilación/producción de NestJS
+dist/
+build/
+
+# Archivos de entorno y configuración sensible
+.env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Entorno de pruebas y cobertura
+coverage/
+.nyc_output/
+
+# Archivos del sistema operativo y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
