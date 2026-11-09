@@ -14,19 +14,18 @@ import { DetallePedidoEntity } from './pedidos/detalle-pedidos.entity';
       isGlobal: true,
     }),
 
-    // 2. Configuramos TypeOrm usando ConfigService para leer el .env de manera segura
+    // 2. Configuramos TypeOrm usando DATABASE_URL y SSL para Supabase Pooler
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USER'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_NAME'),
+        url: configService.get<string>('DATABASE_URL'), // Usamos la URL del pooler
         entities: [PedidoEntity, DetallePedidoEntity],
         synchronize: true,
+        ssl: {
+          rejectUnauthorized: false, // Requerido para conexiones externas en Supabase
+        },
       }),
     }),
     PedidosModule,
