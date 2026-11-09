@@ -1,34 +1,55 @@
-import pymysql
-from pymysql.cursors import DictCursor
+import psycopg2
+from psycopg2.extras import RealDictCursor
 
 from app.config import config
 from app.passwords import crear_password
 
 def obtener_conexion():
-    return pymysql.connect(
-        host = config.db_host,
-        port = config.db_port,
-        user = config.db_usuario,
-        password = config.db_password,
-        database = config.db_name,
-        cursorclass = DictCursor  #las filas llegan como diccionarios
+    return psycopg2.connect(
+        host=config.db_host,
+        port=config.db_port,
+        user=config.db_usuario,
+        password=config.db_password,
+        database=config.db_name,
+        cursor_factory=RealDictCursor  # Las filas llegan como diccionarios
     )
 
 def crear_tablas_y_usuarios_iniciales() -> None:
     conexion = obtener_conexion()
     with conexion.cursor() as cursor:
+        # En PostgreSQL creamos primero los tipos ENUM si no existen
+        cursor.execute(
+            """
+            DO $$ BEGIN
+                CREATE TYPE rol_usuario AS ENUM ('admin', 'usuario');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;
+            """
+        )
+        cursor.execute(
+            """
+            DO $$ BEGIN
+                CREATE TYPE estado_usuario AS ENUM ('activo', 'baneado');
+            EXCEPTION
+                WHEN duplicate_object THEN null;
+            END $$;
+            """
+        )
+        # Crear la tabla de usuarios con sintaxis de Postgres
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS usuarios (
                 usuario VARCHAR(50) PRIMARY KEY,
                 password_hash VARCHAR(255) NOT NULL,
-                rol ENUM('admin', 'usuario') NOT NULL DEFAULT 'usuario',
-                estado ENUM('activo', 'baneado') NOT NULL DEFAULT 'activo'
+                rol rol_usuario NOT NULL DEFAULT 'usuario',
+                estado estado_usuario NOT NULL DEFAULT 'activo'
             )
             """
         )
         cursor.execute("SELECT COUNT(*) AS total FROM usuarios")
-        if cursor.fetchone()["total"] == 0:
+        resultado = cursor.fetchone()
+        if resultado["total"] == 0:
             iniciales = [
                 ("admin", "admin123", "admin"),
                 ("maria", "maria123", "usuario"),
@@ -46,7 +67,7 @@ def buscar_usuario(usuario: str):
     conexion = obtener_conexion()
     with conexion.cursor() as cursor:
         cursor.execute("SELECT * FROM usuarios WHERE usuario = %s", (usuario,))
-        fila = cursor.fetchone()  #None si no existe
+        fila = cursor.fetchone()  # None si no existe
     conexion.close()
     return fila
 
