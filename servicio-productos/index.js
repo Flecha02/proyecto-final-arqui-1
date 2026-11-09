@@ -1,3 +1,9 @@
+// FORZAR IPv4 A NIVEL GLOBAL DE DNS PARA EVITAR ENETUNREACH EN RENDER
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
+
 require('dotenv').config();
 const app = require('./src/app')
 const PUERTO = process.env.PORT || 3001;
