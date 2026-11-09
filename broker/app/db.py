@@ -6,11 +6,7 @@ from app.passwords import crear_password
 
 def obtener_conexion():
     return psycopg2.connect(
-        host=config.db_host,
-        port=config.db_port,
-        user=config.db_usuario,
-        password=config.db_password,
-        database=config.db_name,
+        config.database_url,  # psycopg2 acepta la URI completa de conexión de Supabase
         cursor_factory=RealDictCursor  # Las filas llegan como diccionarios
     )
 

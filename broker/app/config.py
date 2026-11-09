@@ -5,14 +5,10 @@ class Config(BaseSettings):
     algoritmo: str = "HS256"
     minutos_expiracion: int = 30
     
-    url_ms_productos: str = "http://localhost:3001"
-    url_ms_pedidos: str = "http://localhost:3002"
+    url_ms_productos: str = "https://proyecto-final-arqui-1.onrender.com"
+    url_ms_pedidos: str = "https://servicio-pedidos-kyr4.onrender.com"
     
-    db_host: str = "db.lngkrweebixqacagakps.supabase.co"
-    db_port: int = 5432
-    db_usuario: str = "postgres"
-    db_password: str = "TU_CONTRASEÑA_DE_SUPABASE"
-    db_name: str = "postgres"
+    database_url: str  # URL única del Session Pooler de Supabase
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
