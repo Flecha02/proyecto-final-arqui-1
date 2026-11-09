@@ -4,17 +4,20 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from app.config import config
 from app.dependencies import usuario_actual
 
-router = APIRouter(tags=["Proxy / Gateway"])
+# Router específico para Productos
+router_productos = APIRouter(tags=["Proxy - Microservicio de Productos"])
+
+# Router específico para Pedidos
+router_pedidos = APIRouter(tags=["Proxy - Microservicio de Pedidos"])
 
 METODOS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 
 # --- Proxy para el Microservicio de Productos ---
-@router.api_route("/productos", methods=METODOS)
-@router.api_route("/productos/{ruta:path}", methods=METODOS)
+@router_productos.api_route("/productos", methods=METODOS)
+@router_productos.api_route("/productos/{ruta:path}", methods=METODOS)
 async def reenviar_a_productos(
     request: Request, ruta: str = "", usuario = Depends(usuario_actual)
 ):
-    # El usuario pasó el filtro de autenticación
     destino = f"{config.url_ms_productos}/api/productos"
     if ruta:
         destino += f"/{ruta}"
@@ -24,7 +27,7 @@ async def reenviar_a_productos(
         cabeceras["Content-Type"] = request.headers["content-type"]
 
     try:
-        async with httpx.AsyncClient(timeout=10) as cliente:
+        async with httpx.AsyncClient(timeout=15) as cliente:
             respuesta = await cliente.request(
                 request.method,
                 destino,
@@ -45,12 +48,11 @@ async def reenviar_a_productos(
 
 
 # --- Proxy para el Microservicio de Pedidos ---
-@router.api_route("/pedidos", methods=METODOS)
-@router.api_route("/pedidos/{ruta:path}", methods=METODOS)
+@router_pedidos.api_route("/pedidos", methods=METODOS)
+@router_pedidos.api_route("/pedidos/{ruta:path}", methods=METODOS)
 async def reenviar_a_pedidos(
     request: Request, ruta: str = "", usuario = Depends(usuario_actual)
 ):
-    # El usuario pasó el filtro de autenticación
     destino = f"{config.url_ms_pedidos}/pedidos"
     if ruta:
         destino += f"/{ruta}"
@@ -60,7 +62,7 @@ async def reenviar_a_pedidos(
         cabeceras["Content-Type"] = request.headers["content-type"]
 
     try:
-        async with httpx.AsyncClient(timeout=10) as cliente:
+        async with httpx.AsyncClient(timeout=15) as cliente:
             respuesta = await cliente.request(
                 request.method,
                 destino,
@@ -78,3 +80,4 @@ async def reenviar_a_pedidos(
         status_code=respuesta.status_code,
         media_type=respuesta.headers.get("content-type")
     )
+    
