@@ -7,7 +7,7 @@ import { CrearPedidoDto } from './dto/crear-pedido.dto';
 
 @Injectable()
 export class PedidosService {
-    private readonly PRODUCTOS_URL = process.env.PRODUCTOS_URL || 'http://localhost:3001/api/productos';
+    private readonly PRODUCTOS_URL = process.env.PRODUCTOS_URL;
 
     constructor(
         @InjectRepository(PedidoEntity)
@@ -46,7 +46,8 @@ export class PedidosService {
         // 1. Validar existencias, stock y obtener el precio real desde el Servicio de Productos
         for (const item of items) {
             try {
-                const response = await fetch(`${this.PRODUCTOS_URL}/${item.producto_id}`);
+                // CORREGIDO: Añadido /api/productos
+                const response = await fetch(`${this.PRODUCTOS_URL}/api/productos/${item.producto_id}`);
                 
                 if (!response.ok) {
                     throw new NotFoundException(`El producto con ID ${item.producto_id} no existe en el catálogo.`);
@@ -83,7 +84,8 @@ export class PedidosService {
         // 2. Descontar el stock en el Servicio de Productos
         for (const item of itemsConPrecioValidado) {
             try {
-                const resDescuento = await fetch(`${this.PRODUCTOS_URL}/${item.producto_id}/descontar`, {
+                // CORREGIDO: Añadido /api/productos
+                const resDescuento = await fetch(`${this.PRODUCTOS_URL}/api/productos/${item.producto_id}/descontar`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ cantidad: item.cantidad })
@@ -116,7 +118,7 @@ export class PedidosService {
         return await this.pedidoRepository.save(nuevoPedido);
     }
 
-async cambiarEstado(id: number, nuevoEstado: string): Promise<PedidoEntity> {
+    async cambiarEstado(id: number, nuevoEstado: string): Promise<PedidoEntity> {
         const pedido = await this.findOne(id);
         const estadosValidos = ['GENERADO', 'PENDIENTE', 'ENTREGADO', 'CANCELADO'];
 
@@ -124,21 +126,19 @@ async cambiarEstado(id: number, nuevoEstado: string): Promise<PedidoEntity> {
             throw new BadRequestException(`Estado no válido. Debe ser uno de: ${estadosValidos.join(', ')}`);
         }
 
-        // 1. REGLA DE SEGURIDAD: Si el pedido ya está cancelado, no se puede mover a ningún otro estado
         if (pedido.estado === 'CANCELADO') {
             throw new BadRequestException('No se puede modificar el estado de un pedido que ya ha sido cancelado.');
         }
 
-        // 2. Opcional: Si ya fue entregado tampoco debería cancelarse o cambiarse (según tu lógica de negocio)
         if (pedido.estado === 'ENTREGADO') {
             throw new BadRequestException('No se puede modificar un pedido que ya fue entregado.');
         }
 
-        // Lógica de devolución de stock si el pedido pasa a CANCELADO por primera vez
         if (nuevoEstado === 'CANCELADO' && pedido.estado !== 'CANCELADO') {
             for (const detalle of pedido.detalles) {
                 try {
-                    const response = await fetch(`${this.PRODUCTOS_URL}/${detalle.producto_id}/reponerStock`, {
+                    // CORREGIDO: Añadido /api/productos
+                    const response = await fetch(`${this.PRODUCTOS_URL}/api/productos/${detalle.producto_id}/reponerStock`, {
                         method: 'PATCH',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ cantidad: detalle.cantidad })
