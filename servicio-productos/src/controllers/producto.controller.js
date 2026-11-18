@@ -50,13 +50,13 @@ const getProductoById = async (req, res) => {
 // CREAR UN NUEVO PRODUCTO (Create)
 const createProducto = async (req, res) => {
     try {
-        const { nombre, descripcion, precio, existencia } = req.body;
+        const { nombre, descripcion, precio, existencia, codigo } = req.body;
 
         // Validamos que manden los campos obligatorios principales
-        if (!nombre || precio === undefined || existencia === undefined) {
+        if (!nombre || precio === undefined || existencia === undefined || codigo === undefined) {
             return res.status(400).json({
                 ok: false,
-                mensaje: "Faltan datos obligatorios (nombre, precio o existencia)."
+                mensaje: "Faltan datos obligatorios (nombre, precio, existencia o codigo)."
             });
         }
 
@@ -66,7 +66,8 @@ const createProducto = async (req, res) => {
             nombre,
             descripcion,
             precio,
-            existencia
+            existencia,
+            codigo
         });
 
         return res.status(201).json({

@@ -39,6 +39,18 @@ const Product = sequelize.define('Product', {
                 msg: "La existencia no puede ser negativa (debe ser mayor o igual a 0)." // Regla de negocio
             }
         }
+    },
+    codigo: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        unique: true,
+        validate: {
+            isInt: { msg: "El código debe ser un número entero." },
+            min: {
+                args: [1],
+                msg: "El código debe ser un número positivo." // Regla de negocio
+            }
+        }
     }
 }, {
     tableName: 'productos',
